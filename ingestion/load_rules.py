@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import json
 from langchain_openai import OpenAIEmbeddings
+from langchain_chroma import Chroma
 from langchain_core.documents import Document
 
 from config import settings
@@ -88,8 +89,7 @@ def create_rules_index():
     # Create embeddings
     print(f"🔮 Creating embeddings using {settings.EMBEDDING_MODEL}...")
     embeddings = OpenAIEmbeddings(
-        model=settings.EMBEDDING_MODEL,
-        openai_api_key=settings.OPENAI_API_KEY
+        model=settings.EMBEDDING_MODEL
     )
     
     # Create vector store
