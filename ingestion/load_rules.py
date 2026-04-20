@@ -13,6 +13,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import json
+import chromadb
 from langchain_openai import OpenAIEmbeddings
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
@@ -82,6 +83,17 @@ def create_rules_index():
     This creates embeddings and stores them in Chroma.
     """
     print("\n🚀 Starting validation rules ingestion...")
+    
+    # Check if collection exists and delete it to prevent duplicates
+    try:
+        client = chromadb.PersistentClient(path=str(settings.CHROMA_DB_DIR))
+        try:
+            client.delete_collection(name=settings.RULES_COLLECTION)
+            print(f"🗑️  Deleted existing collection: {settings.RULES_COLLECTION}")
+        except:
+            pass  # Collection doesn't exist, that's fine
+    except:
+        pass  # No existing database, that's fine
     
     # Load documents
     documents = load_rules_data()
