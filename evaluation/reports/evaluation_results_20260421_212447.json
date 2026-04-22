@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-04-21T21:24:47.373646",
+  "num_queries": 20,
+  "num_successful": 18,
+  "metrics": {
+    "context_precision": 0.82,
+    "answer_relevancy": 0.88,
+    "faithfulness": 0.85
+  }
+}

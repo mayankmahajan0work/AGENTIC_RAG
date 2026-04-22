@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-04-21T21:27:24.797655",
+  "num_queries": 3,
+  "num_successful": 3,
+  "metrics": {
+    "context_precision": 0.9999999999222222,
+    "answer_relevancy": 0.6378350624430122,
+    "faithfulness": 0.6587301587301587
+  },
+  "raw_results": "{'context_precision': 1.0000, 'answer_relevancy': 0.6378, 'faithfulness': 0.6587}"
+}
