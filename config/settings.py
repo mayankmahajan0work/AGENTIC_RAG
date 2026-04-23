@@ -25,8 +25,7 @@ LANGCHAIN_API_KEY = os.getenv("LANGCHAIN_API_KEY")
 # LLM SETTINGS - Which model to use and how it behaves
 # =============================================================================
 LLM_MODEL = "gpt-4o-mini"  # The AI model we'll use
-LLM_TEMPERATURE = 0.0              # 0 = consistent/deterministic, 1 = creative
-LLM_MAX_TOKENS = 2000              # Maximum length of AI responses
+LLM_MAX_TOKENS = 2000      # Maximum length of AI responses
 
 
 # =============================================================================
@@ -54,13 +53,6 @@ OUTPUT_DIR = DATA_DIR / "output"
 
 SCHEMA_FILE = INPUT_DIR / "claims_schema.json"
 RULES_FILE = INPUT_DIR / "validation_rules.json"
-
-
-# =============================================================================
-# APP SETTINGS
-# =============================================================================
-APP_NAME = "Agentic RAG - Healthcare Claims Validation"
-DEBUG_MODE = False
 
 
 # =============================================================================

@@ -33,28 +33,19 @@ def extract_source_names(docs: List[dict]) -> List[str]:
     """
     sources = []
     for doc in docs:
-        content = doc.get('content', '')
         metadata = doc.get('metadata', {})
         
-        # Try to extract table name from content
-        lines = content.split('\n')
-        for line in lines[:3]:  # Check first few lines
-            if line.startswith('Table:'):
-                table_name = line.replace('Table:', '').strip()
-                sources.append(f"Table: {table_name}")
-                break
-            elif 'Rule ID:' in line:
-                rule_id = line.split('Rule ID:')[1].strip().split()[0]
-                sources.append(f"Rule: {rule_id}")
-                break
+        # Check metadata first (most reliable)
+        if 'table_name' in metadata:
+            sources.append(f"Table: {metadata['table_name']}")
+        elif 'rule_id' in metadata:
+            sources.append(f"Rule: {metadata['rule_id']}")
         else:
-            # Fallback to metadata if available
-            if 'table_name' in metadata:
-                sources.append(f"Table: {metadata['table_name']}")
-            elif 'rule_id' in metadata:
-                sources.append(f"Rule: {metadata['rule_id']}")
-            elif 'source' in metadata:
-                sources.append(metadata['source'])
+            # Fallback: parse first line of content
+            content = doc.get('content', '')
+            first_line = content.split('\n')[0] if content else ''
+            if first_line.startswith('Table:') or 'Rule ID:' in first_line:
+                sources.append(first_line.split(':')[0] + ': ' + first_line.split(':')[1].strip().split()[0])
     
     return sources
 

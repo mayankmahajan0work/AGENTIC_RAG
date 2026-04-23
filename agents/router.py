@@ -61,18 +61,11 @@ def classify_intent(query: str) -> IntentType:
     # Get classification
     result = chain.invoke({"query": query})
     
-    # Parse to enum
-    result_clean = result.strip().upper()
-    
-    # Map to IntentType
-    intent_mapping = {
-        "SCHEMA": IntentType.SCHEMA,
-        "VALIDATION": IntentType.VALIDATION,
-        "SQL_GENERATION": IntentType.SQL_GENERATION,
-        "RELATIONSHIP": IntentType.RELATIONSHIP
-    }
-    
-    return intent_mapping.get(result_clean, IntentType.SCHEMA)  # Default to SCHEMA
+    # Parse to enum (convert LLM output to lowercase to match enum values)
+    try:
+        return IntentType(result.strip().lower())
+    except ValueError:
+        return IntentType.SCHEMA  # Default fallback
 
 
 def classify_intent_with_reasoning(query: str) -> dict:
@@ -109,18 +102,17 @@ Reason: <your explanation>"""
     
     # Parse result
     lines = result.strip().split('\n', 1)
-    category = lines[0].strip().upper()
+    category = lines[0].strip().lower()  # Convert to lowercase for enum
     reasoning = lines[1].strip() if len(lines) > 1 else "No reasoning provided"
     
-    intent_mapping = {
-        "SCHEMA": IntentType.SCHEMA,
-        "VALIDATION": IntentType.VALIDATION,
-        "SQL_GENERATION": IntentType.SQL_GENERATION,
-        "RELATIONSHIP": IntentType.RELATIONSHIP
-    }
+    # Convert to IntentType
+    try:
+        intent = IntentType(category)
+    except ValueError:
+        intent = IntentType.SCHEMA  # Default fallback
     
     return {
-        "intent": intent_mapping.get(category, IntentType.SCHEMA),
+        "intent": intent,
         "reasoning": reasoning,
         "raw_response": result
     }

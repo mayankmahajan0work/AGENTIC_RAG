@@ -6,9 +6,7 @@ from retriever.vector_store import get_vector_stores, VectorStoreManager
 from retriever.retrieval import (
     retrieve_schema_info,
     retrieve_validation_rules,
-    retrieve_combined,
-    retrieve_by_table,
-    retrieve_rules_by_type
+    retrieve_combined
 )
 
 __all__ = [
@@ -16,7 +14,5 @@ __all__ = [
     "VectorStoreManager",
     "retrieve_schema_info",
     "retrieve_validation_rules",
-    "retrieve_combined",
-    "retrieve_by_table",
-    "retrieve_rules_by_type"
+    "retrieve_combined"
 ]

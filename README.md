@@ -463,6 +463,7 @@ Once MVP is complete, consider these enhancements:
 4. **Advanced UI Features**
    - Query history and favorites
    - Export SQL to file
+   - Multi-turn conversation and memory state
    - Side-by-side comparison of multiple validation approaches
    - Visualization of schema relationships
 

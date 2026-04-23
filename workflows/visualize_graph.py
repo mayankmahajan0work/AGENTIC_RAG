@@ -1,7 +1,7 @@
 """
-Visualize the LangGraph workflow using Mermaid diagrams.
+Visualize the LangGraph workflow.
 
-Automatically generates and renders the graph structure.
+Generates Mermaid diagrams and ASCII representations of the workflow graph.
 """
 
 import sys
@@ -11,91 +11,91 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from workflows.graph_builder import create_workflow
 
 
-def get_mermaid_diagram():
+def visualize_workflow(format="all"):
     """
-    Generate Mermaid diagram code from the LangGraph workflow.
+    Visualize the LangGraph workflow in various formats.
+    
+    Args:
+        format: "all", "mermaid", "ascii", or "info"
     
     Returns:
-        str: Mermaid diagram markup
+        dict: Contains mermaid_code, ascii_diagram, and graph info
     """
-    # Create and compile the workflow
-    workflow = create_workflow()
-    app = workflow.compile()
-    
-    # Get the graph and generate Mermaid diagram
-    graph = app.get_graph()
-    mermaid_code = graph.draw_mermaid()
-    
-    return mermaid_code
-
-
-def print_ascii_diagram():
-    """
-    Print ASCII representation of the graph.
-    """
+    # Create workflow once (avoid duplication)
     workflow = create_workflow()
     app = workflow.compile()
     graph = app.get_graph()
     
-    try:
-        ascii_diagram = graph.draw_ascii()
-        return ascii_diagram
-    except Exception as e:
-        return f"ASCII diagram not available: {e}"
-
-
-def print_graph_info():
-    """
-    Print information about the graph structure.
-    """
-    workflow = create_workflow()
-    app = workflow.compile()
-    graph = app.get_graph()
+    result = {}
     
-    print("\n" + "="*80)
-    print("LANGGRAPH WORKFLOW STRUCTURE")
-    print("="*80 + "\n")
+    # Mermaid diagram
+    if format in ["all", "mermaid"]:
+        result['mermaid'] = graph.draw_mermaid()
     
-    print("📊 Nodes:")
-    for node in graph.nodes:
-        print(f"  • {node}")
+    # ASCII diagram
+    if format in ["all", "ascii"]:
+        try:
+            result['ascii'] = graph.draw_ascii()
+        except Exception as e:
+            result['ascii'] = f"ASCII diagram not available: {e}"
     
-    print("\n🔗 Edges:")
-    for edge in graph.edges:
-        print(f"  • {edge.source} → {edge.target}")
+    # Graph info
+    if format in ["all", "info"]:
+        nodes = [str(node) for node in graph.nodes]
+        edges = [f"{edge.source} → {edge.target}" for edge in graph.edges]
+        result['info'] = {
+            'nodes': nodes,
+            'edges': edges,
+            'description': (
+                "RAG workflow with 3 stages:\n"
+                "  1. Router: Classifies user intent\n"
+                "  2. Retriever: Fetches relevant context from ChromaDB\n"
+                "  3. Generator: Creates SQL queries or explanations using LLM"
+            )
+        }
     
-    print("\n📝 Workflow Description:")
-    print("  This is a linear pipeline with 3 processing nodes:")
-    print("  1. Router: Classifies user intent")
-    print("  2. Retriever: Fetches relevant context from ChromaDB")
-    print("  3. Generator: Creates SQL queries or explanations using LLM")
+    return result
 
 
 if __name__ == "__main__":
     print("\n🎨 VISUALIZING LANGGRAPH WORKFLOW\n")
     
+    # Get all visualization formats
+    viz = visualize_workflow(format="all")
+    
     # Print graph information
-    print_graph_info()
+    print("="*80)
+    print("WORKFLOW STRUCTURE")
+    print("="*80 + "\n")
+    
+    print("📊 Nodes:")
+    for node in viz['info']['nodes']:
+        print(f"  • {node}")
+    
+    print("\n🔗 Edges:")
+    for edge in viz['info']['edges']:
+        print(f"  • {edge}")
+    
+    print("\n📝 Description:")
+    print(viz['info']['description'])
     
     # Print ASCII diagram
     print("\n" + "="*80)
     print("ASCII DIAGRAM")
     print("="*80 + "\n")
-    ascii_diagram = print_ascii_diagram()
-    print(ascii_diagram)
+    print(viz['ascii'])
     
-    # Get Mermaid diagram
+    # Print Mermaid diagram
     print("\n" + "="*80)
     print("MERMAID DIAGRAM CODE")
     print("="*80 + "\n")
-    mermaid_code = get_mermaid_diagram()
-    print(mermaid_code)
+    print(viz['mermaid'])
     
     print("\n" + "="*80)
     print("✅ VISUALIZATION COMPLETE")
     print("="*80)
-    print("\n💡 The Mermaid diagram above can be:")
-    print("  • Rendered visually (see below)")
+    print("\n💡 The Mermaid diagram can be:")
+    print("  • Rendered visually in compatible tools")
     print("  • Pasted into GitHub README.md")
-    print("  • Used in any Mermaid-compatible tool")
+    print("  • Used in any Mermaid-compatible viewer")
     print()

@@ -59,37 +59,6 @@ def run_query(query: str) -> Dict[str, Any]:
     }
 
 
-def run_query_streaming(query: str):
-    """
-    Run query with streaming output (for real-time feedback).
-    
-    Yields state updates as the workflow progresses.
-    
-    Args:
-        query: User's question
-    
-    Yields:
-        State updates from each node
-    """
-    # Initialize state
-    initial_state = {
-        "query": query,
-        "intent": None,
-        "retrieved_context": [],
-        "response": "",
-        "sql_queries": [],
-        "metadata": {}
-    }
-    
-    # Create and compile workflow
-    workflow = create_workflow()
-    app = workflow.compile()
-    
-    # Stream results
-    for state_update in app.stream(initial_state):
-        yield state_update
-
-
 def main():
     """
     Interactive mode - run queries from command line.

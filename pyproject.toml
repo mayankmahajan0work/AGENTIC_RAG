@@ -1,23 +1,32 @@
 [project]
 name = "agentic-rag"
 version = "0.1.0"
-description = "Add your description here"
+description = "Healthcare Claims RAG System with LangGraph"
 requires-python = ">=3.11"
 dependencies = [
+    # Core RAG infrastructure
     "chromadb>=1.5.8",
-    "datasets>=4.8.4",
     "langchain>=1.2.15",
     "langchain-chroma>=1.1.0",
-    "langchain-community>=0.4.1",
     "langchain-core>=1.3.0",
     "langchain-openai>=1.1.14",
     "langgraph>=1.1.8",
-    "numpy>=2.4.4",
     "openai>=2.32.0",
-    "pandas>=3.0.2",
+    
+    # Evaluation
+    "ragas>=0.3.1",
+    "datasets>=4.8.4",
+    
+    # UI
+    "streamlit>=1.40.0",
+    
+    # Configuration & utilities
     "pydantic>=2.13.2",
     "pydantic-settings>=2.13.1",
     "python-dotenv>=1.2.2",
-    "ragas>=0.3.1",
-    "streamlit>=1.56.0",
+    
+    # Note: numpy and pandas are transitive dependencies
+    # (required by ragas, datasets, streamlit) but included
+    # explicitly for version control
+    "pandas>=3.0.2",
 ]

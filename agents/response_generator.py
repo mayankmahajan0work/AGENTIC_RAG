@@ -200,29 +200,3 @@ def generate_response(
         response = "I'm not sure how to answer that question. Please rephrase or ask about schema, validation rules, or SQL queries."
     
     return response
-
-
-def generate_sql_only(
-    query: str,
-    schema_docs: List[Dict[str, Any]],
-    rules_docs: List[Dict[str, Any]] = None
-) -> str:
-    """
-    Generate ONLY SQL query without explanations.
-    
-    Simplified version for when you just want the SQL.
-    
-    Args:
-        query: What SQL to generate
-        schema_docs: Schema information
-        rules_docs: Optional validation rules for reference
-    
-    Returns:
-        SQL query string
-    """
-    return generate_response(
-        query=query,
-        intent=IntentType.SQL_GENERATION,
-        schema_docs=schema_docs,
-        rules_docs=rules_docs
-    )
