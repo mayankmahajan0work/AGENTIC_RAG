@@ -15,7 +15,7 @@ from config import settings
 
 
 # System prompts for different intent types
-SCHEMA_PROMPT = """You are a healthcare claims database expert. 
+SCHEMA_PROMPT = """You are a database schema expert. 
 The user asked about database schema/structure.
 
 CRITICAL INSTRUCTIONS:
@@ -31,7 +31,7 @@ User Question: {query}
 Provide a helpful answer about the database structure using ONLY the information above."""
 
 
-VALIDATION_PROMPT = """You are a data quality expert for healthcare claims.
+VALIDATION_PROMPT = """You are a data quality and validation expert.
 The user asked about validation rules or data quality checks.
 
 CRITICAL INSTRUCTIONS:
@@ -93,28 +93,6 @@ SELECT * FROM claim_lines WHERE diagnosis_code = 'D0.2';
 ```
 
 Generate SQL now."""
-
-
-RELATIONSHIP_PROMPT = """You are a database relationship expert for healthcare claims.
-The user asked about how tables relate to each other.
-
-CRITICAL INSTRUCTIONS:
-- ONLY describe relationships explicitly shown in the schema below
-- DO NOT assume or create relationships that aren't documented
-- Only reference columns that actually exist in the tables
-
-Schema Information:
-{context}
-
-User Question: {query}
-
-Explain the relationships clearly using ONLY the information above:
-1. Which tables are involved
-2. The foreign key relationships (as documented)
-3. How to join them in SQL (using only existing columns)
-4. Sample join syntax
-
-If the schema doesn't show the relationships the user asked about, clearly state that."""
 
 
 def format_context(documents: List[Dict[str, Any]]) -> str:
@@ -188,13 +166,6 @@ def generate_response(
             "rules_context": rules_context,
             "query": query
         })
-        
-    elif intent == IntentType.RELATIONSHIP:
-        context = format_context(schema_docs or [])
-        prompt_template = RELATIONSHIP_PROMPT
-        prompt = ChatPromptTemplate.from_template(prompt_template)
-        chain = prompt | llm | StrOutputParser()
-        response = chain.invoke({"context": context, "query": query})
         
     else:
         response = "I'm not sure how to answer that question. Please rephrase or ask about schema, validation rules, or SQL queries."

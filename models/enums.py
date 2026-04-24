@@ -14,7 +14,6 @@ class IntentType(str, Enum):
     
     The router agent will classify each question into one of these types.
     """
-    SCHEMA = "schema"              # Questions about database structure
+    SCHEMA = "schema"              # Questions about database structure and relationships
     VALIDATION = "validation"      # Questions about validation rules
     SQL_GENERATION = "sql"         # Requests to generate SQL queries
-    RELATIONSHIP = "relationship"  # Questions about table relationships

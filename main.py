@@ -8,6 +8,19 @@ Run queries through the RAG pipeline:
 from typing import Dict, Any
 
 from workflows.graph_builder import create_workflow
+from config.settings import validate_settings
+
+# Cache the compiled workflow (build once, reuse for all queries)
+_cached_workflow = None
+
+
+def get_workflow():
+    """Get or create the compiled workflow graph."""
+    global _cached_workflow
+    if _cached_workflow is None:
+        workflow = create_workflow()
+        _cached_workflow = workflow.compile()
+    return _cached_workflow
 
 
 def run_query(query: str) -> Dict[str, Any]:
@@ -32,9 +45,8 @@ def run_query(query: str) -> Dict[str, Any]:
         "metadata": {}
     }
     
-    # Create and compile workflow
-    workflow = create_workflow()
-    app = workflow.compile()
+    # Get compiled workflow (cached after first call)
+    app = get_workflow()
     
     # Run workflow
     print(f"\n{'='*80}")
@@ -63,8 +75,12 @@ def main():
     """
     Interactive mode - run queries from command line.
     """
+    # Validate configuration
+    validate_settings()
+    
     print("\n" + "="*80)
-    print("🤖 AGENTIC RAG FOR HEALTHCARE CLAIMS DATA VALIDATION")
+    print("🤖 AGENTIC RAG FRAMEWORK FOR DATA ENGINEERING & ETL")
+    print("Demo: Healthcare Claims Validation")
     print("="*80)
     print("\nAsk questions about:")
     print("  • Table schemas and structures")

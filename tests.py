@@ -13,6 +13,19 @@ from agents import classify_intent_with_reasoning, generate_response
 from retriever import retrieve_schema_info, retrieve_validation_rules, retrieve_combined
 from models.enums import IntentType
 from main import run_query
+from config.settings import validate_settings
+
+# Track test results
+test_results = {"passed": 0, "failed": 0, "errors": []}
+
+def assert_test(condition: bool, message: str):
+    """Simple assertion helper."""
+    if condition:
+        test_results["passed"] += 1
+    else:
+        test_results["failed"] += 1
+        test_results["errors"].append(message)
+        print(f"❌ ASSERTION FAILED: {message}")
 
 
 # ============================================================================
@@ -25,18 +38,24 @@ def test_router():
     print("TEST: Router Agent - Intent Classification")
     print("=" * 80)
     
-    test_queries = [
-        "What columns are in the claims table?",
-        "How do I check for duplicate claims?",
-        "Write SQL to find all denied claims",
-        "How are members and providers related?"
+    test_cases = [
+        ("What columns are in the claims table?", "schema"),
+        ("How do I check for duplicate claims?", "validation"),
+        ("Generate SQL query to find all denied claims", "sql"),
+        ("How are members and providers related?", "schema"),  # Merged into schema
     ]
     
-    for query in test_queries:
+    for query, expected_intent in test_cases:
         print(f"\n📝 Query: {query}")
         result = classify_intent_with_reasoning(query)
         print(f"🎯 Intent: {result['intent'].value}")
         print(f"💭 {result['reasoning']}")
+        
+        # Assertion: Check intent is correct
+        assert_test(
+            result['intent'].value == expected_intent,
+            f"Expected intent '{expected_intent}' but got '{result['intent'].value}' for query: {query}"
+        )
 
 
 def test_schema_response():
@@ -59,6 +78,11 @@ def test_schema_response():
     print("-" * 80)
     print(response)
     print("-" * 80)
+    
+    # Assertions: Check response is not empty and mentions columns
+    assert_test(len(response) > 0, "Response should not be empty")
+    assert_test("claim_id" in response.lower() or "column" in response.lower(), 
+                "Response should mention columns or specific column names")
 
 
 def test_validation_response():
@@ -81,6 +105,13 @@ def test_validation_response():
     print("-" * 80)
     print(response)
     print("-" * 80)
+    
+    # Assertions: Check response includes SQL and mentions duplicates
+    assert_test(len(response) > 0, "Response should not be empty")
+    assert_test("SELECT" in response or "sql" in response.lower(), 
+                "Validation response should include or reference SQL")
+    assert_test("duplicate" in response.lower(), 
+                "Response should mention duplicates")
 
 
 def test_sql_generation():
@@ -104,28 +135,13 @@ def test_sql_generation():
     print("-" * 80)
     print(response)
     print("-" * 80)
-
-
-def test_relationship_response():
-    """Test response for relationship questions."""
-    print("\n\n" + "=" * 80)
-    print("TEST: Response Generator - Relationship Question")
-    print("=" * 80)
     
-    query = "How do I join claims with members?"
-    print(f"\n📝 Query: {query}\n")
-    
-    schema_docs = retrieve_schema_info("claims members tables join", k=2)
-    response = generate_response(
-        query=query,
-        intent=IntentType.RELATIONSHIP,
-        schema_docs=schema_docs
-    )
-    
-    print("🤖 Response:")
-    print("-" * 80)
-    print(response)
-    print("-" * 80)
+    # Assertions: Check SQL is generated correctly
+    assert_test(len(response) > 0, "SQL response should not be empty")
+    assert_test("SELECT" in response, "SQL should contain SELECT")
+    assert_test("claims" in response.lower(), "SQL should reference claims table")
+    assert_test("billed_amount" in response.lower() or "10000" in response, 
+                "SQL should filter by billed amount")
 
 
 # ============================================================================
@@ -148,6 +164,10 @@ def test_schema_retrieval():
         print(f"--- Document {i} ---")
         print(f"Table: {doc['metadata'].get('table_name', 'N/A')}")
         print(f"Content preview: {doc['content'][:200]}...\n")
+    
+    # Assertions: Check retrieval works
+    assert_test(len(results) > 0, "Should retrieve at least one document")
+    assert_test(len(results) <= 2, "Should not exceed k=2 documents")
 
 
 def test_rules_retrieval():
@@ -168,6 +188,10 @@ def test_rules_retrieval():
         print(f"Rule Type: {doc['metadata'].get('rule_type', 'N/A')}")
         print(f"Severity: {doc['metadata'].get('severity', 'N/A')}")
         print(f"Content preview: {doc['content'][:150]}...\n")
+    
+    # Assertions: Check retrieval works
+    assert_test(len(results) > 0, "Should retrieve at least one rule document")
+    assert_test(len(results) <= 3, "Should not exceed k=3 documents")
 
 
 def test_combined_retrieval():
@@ -247,22 +271,6 @@ def test_sql_query():
         print(f"  (No SQL - got explanation instead)")
 
 
-def test_relationship_query():
-    """Test relationship question through full workflow."""
-    print("\n" + "="*80)
-    print("TEST: Complete Workflow - Relationship Query")
-    print("="*80)
-    
-    result = run_query("How do I join members and claims tables?")
-    
-    print(f"\n📊 RESULTS:")
-    print(f"  Intent: {result['intent']}")
-    print(f"  Documents Retrieved: {result['num_docs_retrieved']}")
-    print(f"  SQL Generated: {'Yes' if result['sql_queries'] else 'No'}")
-    print(f"\n💬 Response Preview:")
-    print(f"  {result['response'][:200]}...")
-
-
 def test_complex_query():
     """Test a complex real-world query through full workflow."""
     print("\n" + "="*80)
@@ -294,7 +302,6 @@ def run_agent_tests():
     test_schema_response()
     test_validation_response()
     test_sql_generation()
-    test_relationship_response()
     print("\n✅ Agent tests completed!\n")
 
 
@@ -320,7 +327,6 @@ def run_workflow_tests():
     test_schema_query()
     test_validation_query()
     test_sql_query()
-    test_relationship_query()
     test_complex_query()
     
     print("\n✅ Workflow tests completed!\n")
@@ -328,6 +334,9 @@ def run_workflow_tests():
 
 def run_all_tests():
     """Run complete test suite."""
+    # Validate config first
+    validate_settings()
+    
     print("\n" + "="*80)
     print("🧪 RUNNING COMPLETE TEST SUITE")
     print("="*80)
@@ -338,16 +347,28 @@ def run_all_tests():
         run_workflow_tests()
         
         print("\n" + "="*80)
-        print("✅ ALL TESTS COMPLETED SUCCESSFULLY!")
+        if test_results["failed"] == 0:
+            print("✅ ALL TESTS PASSED!")
+        else:
+            print(f"⚠️ SOME TESTS FAILED")
         print("="*80)
-        print("""
-🎉 Test Summary:
-  ✓ Agent tests: Router and response generation
-  ✓ Retriever tests: Schema and rules retrieval
+        print(f"""
+📊 Test Summary:
+  ✅ Passed: {test_results['passed']}
+  ❌ Failed: {test_results['failed']}
+  
+🎯 Test Coverage:
+  ✓ Agent tests: Router classification and response generation
+  ✓ Retriever tests: Vector search from both indexes  
   ✓ Workflow tests: End-to-end RAG pipeline
   
-The system is working correctly!
-        """)
+The system is {'working correctly!' if test_results['failed'] == 0 else 'has issues - see errors above'}        """)
+        
+        if test_results["failed"] > 0:
+            print("\n❌ Failed Assertions:")
+            for error in test_results["errors"]:
+                print(f"  - {error}")
+            sys.exit(1)
         
     except Exception as e:
         print(f"\n❌ Test failed with error: {e}")

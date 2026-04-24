@@ -1,7 +1,5 @@
 """
-Visualize the LangGraph workflow.
-
-Generates Mermaid diagrams and ASCII representations of the workflow graph.
+Visualize the LangGraph workflow with clean, visible styling.
 """
 
 import sys
@@ -11,47 +9,60 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from workflows.graph_builder import create_workflow
 
 
-def visualize_workflow(format="all"):
+def visualize_workflow(format="mermaid"):
     """
-    Visualize the LangGraph workflow in various formats.
+    Generate workflow visualization.
     
     Args:
-        format: "all", "mermaid", "ascii", or "info"
+        format: "mermaid" or "info"
     
     Returns:
-        dict: Contains mermaid_code, ascii_diagram, and graph info
+        dict: Contains mermaid_code or graph info
     """
-    # Create workflow once (avoid duplication)
     workflow = create_workflow()
     app = workflow.compile()
     graph = app.get_graph()
     
     result = {}
     
-    # Mermaid diagram
-    if format in ["all", "mermaid"]:
-        result['mermaid'] = graph.draw_mermaid()
+    if format == "mermaid":
+        # Get base mermaid code from LangGraph
+        mermaid_code = graph.draw_mermaid()
+        
+        # Remove the :::first and :::last classes that apply different styling
+        mermaid_code = mermaid_code.replace(":::first", "")
+        mermaid_code = mermaid_code.replace(":::last", "")
+        
+        # Uniform color scheme with proper node background colors:
+        # - All nodes: Light blue background (#e3f2fd) with dark blue text/border (#1565c0)
+        # - All edges: Black (#000000)
+        config = """%%{init: {'theme':'base', 'themeVariables': {
+            'primaryColor':'#e3f2fd',
+            'primaryTextColor':'#1565c0',
+            'primaryBorderColor':'#1565c0',
+            'lineColor':'#000000',
+            'secondaryColor':'#e3f2fd',
+            'tertiaryColor':'#e3f2fd',
+            'clusterBkg':'#e3f2fd',
+            'clusterBorder':'#1565c0',
+            'defaultLinkColor':'#000000',
+            'edgeLabelBackground':'#ffffff',
+            'nodeTextColor':'#1565c0'
+        }}}%%"""
+        
+        # Replace the config section
+        if "---\nconfig:" in mermaid_code:
+            graph_start = mermaid_code.find("graph TD;")
+            if graph_start != -1:
+                mermaid_code = config + "\n" + mermaid_code[graph_start:]
+        
+        result['mermaid'] = mermaid_code
     
-    # ASCII diagram
-    if format in ["all", "ascii"]:
-        try:
-            result['ascii'] = graph.draw_ascii()
-        except Exception as e:
-            result['ascii'] = f"ASCII diagram not available: {e}"
-    
-    # Graph info
-    if format in ["all", "info"]:
-        nodes = [str(node) for node in graph.nodes]
-        edges = [f"{edge.source} → {edge.target}" for edge in graph.edges]
+    elif format == "info":
         result['info'] = {
-            'nodes': nodes,
-            'edges': edges,
-            'description': (
-                "RAG workflow with 3 stages:\n"
-                "  1. Router: Classifies user intent\n"
-                "  2. Retriever: Fetches relevant context from ChromaDB\n"
-                "  3. Generator: Creates SQL queries or explanations using LLM"
-            )
+            'nodes': [str(node) for node in graph.nodes],
+            'edges': [f"{edge.source} → {edge.target}" for edge in graph.edges],
+            'description': "RAG workflow: Router → Retriever → Generator"
         }
     
     return result
@@ -60,36 +71,31 @@ def visualize_workflow(format="all"):
 if __name__ == "__main__":
     print("\n🎨 VISUALIZING LANGGRAPH WORKFLOW\n")
     
-    # Get all visualization formats
-    viz = visualize_workflow(format="all")
+    # Get workflow info
+    info_viz = visualize_workflow(format="info")
     
-    # Print graph information
     print("="*80)
     print("WORKFLOW STRUCTURE")
     print("="*80 + "\n")
     
     print("📊 Nodes:")
-    for node in viz['info']['nodes']:
+    for node in info_viz['info']['nodes']:
         print(f"  • {node}")
     
     print("\n🔗 Edges:")
-    for edge in viz['info']['edges']:
+    for edge in info_viz['info']['edges']:
         print(f"  • {edge}")
     
     print("\n📝 Description:")
-    print(viz['info']['description'])
+    print(info_viz['info']['description'])
     
-    # Print ASCII diagram
-    print("\n" + "="*80)
-    print("ASCII DIAGRAM")
-    print("="*80 + "\n")
-    print(viz['ascii'])
+    # Get Mermaid diagram
+    mermaid_viz = visualize_workflow(format="mermaid")
     
-    # Print Mermaid diagram
     print("\n" + "="*80)
     print("MERMAID DIAGRAM CODE")
     print("="*80 + "\n")
-    print(viz['mermaid'])
+    print(mermaid_viz['mermaid'])
     
     print("\n" + "="*80)
     print("✅ VISUALIZATION COMPLETE")

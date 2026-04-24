@@ -14,8 +14,12 @@ from pathlib import Path
 # Add parent directory to path so we can import from other modules
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from config.settings import validate_settings
 from ingestion.load_schema import create_schema_index
 from ingestion.load_rules import create_rules_index
+
+# Validate configuration before ingestion
+validate_settings()
 
 
 def ingest_all_data():

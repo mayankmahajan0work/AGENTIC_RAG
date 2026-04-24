@@ -87,5 +87,5 @@ def validate_settings():
     print("✅ All settings validated successfully!")
 
 
-# Run validation when this module is imported
-validate_settings()
+# Note: Validation is called by entrypoints (app.py, main.py, ingestion scripts)
+# This keeps the module importable without requiring a valid .env file

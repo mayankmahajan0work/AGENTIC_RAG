@@ -14,23 +14,21 @@ from config import settings
 
 
 # System prompt for intent classification
-ROUTER_SYSTEM_PROMPT = """You are an expert at classifying healthcare claims database queries.
+ROUTER_SYSTEM_PROMPT = """You are an expert at classifying database and data engineering queries.
 
 Given a user's question, classify it into ONE of these categories:
 
-1. SCHEMA - Questions about table structure, columns, data types, relationships
-   Examples: "What columns are in the claims table?", "How are members and claims related?"
+1. SCHEMA - Questions about table structure, columns, data types, or how tables relate/join
+   Examples: "What columns are in the claims table?", "How do I join claims and members?"
 
 2. VALIDATION - Questions about data quality rules, validation checks, business rules
    Examples: "How do I check for duplicates?", "What are the data quality rules?"
 
-3. SQL_GENERATION - Requests to generate SQL queries for specific analysis
-   Examples: "Write SQL to find high-cost claims", "Generate a query for denied claims"
+3. SQL_GENERATION - Requests to generate/write/create SQL queries for specific analysis or data retrieval
+   Examples: "Write SQL to find high-cost claims", "Generate a query for denied claims", "Create SQL to find all rejected claims"
+   Keywords: "write SQL", "generate", "create query", "show me SQL"
 
-4. RELATIONSHIP - Questions about how tables relate or join together
-   Examples: "How do I join claims with providers?", "What's the relationship between members and claims?"
-
-Respond with ONLY the category name: SCHEMA, VALIDATION, SQL_GENERATION, or RELATIONSHIP"""
+Respond with ONLY one of these exact words (lowercase): schema, validation, sql"""
 
 
 def classify_intent(query: str) -> IntentType:
@@ -84,7 +82,7 @@ def classify_intent_with_reasoning(query: str) -> dict:
 After the category, on a new line, explain why in one sentence.
 
 Format:
-CATEGORY
+<category>
 Reason: <your explanation>"""
     
     llm = ChatOpenAI(

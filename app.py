@@ -5,7 +5,13 @@ Interface with expandable sections for details.
 """
 
 import streamlit as st
+import streamlit.components.v1 as components
 from main import run_query
+from config.settings import validate_settings
+from workflows.visualize_graph import visualize_workflow
+
+# Validate configuration on startup
+validate_settings()
 
 # Page config
 st.set_page_config(
@@ -39,7 +45,6 @@ st.markdown("""
     .intent-schema { background-color: #e3f2fd; color: #1565c0; }
     .intent-validation { background-color: #fff3e0; color: #e65100; }
     .intent-sql { background-color: #e8f5e9; color: #2e7d32; }
-    .intent-relationship { background-color: #f3e5f5; color: #6a1b9a; }
     .stButton button {
         width: 100%;
     }
@@ -48,31 +53,7 @@ st.markdown("""
 
 # Header
 st.markdown('<div class="main-header">🏥 AI Assistant</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-header">Ask questions about claims data, schema, validation rules, or get SQL queries</div>', unsafe_allow_html=True)
-
-# Example queries
-st.markdown("**💡 Try these examples:**")
-col1, col2, col3 = st.columns(3)
-
-example_queries = {
-    "Schema": "What columns are in the claims table?",
-    "Validation": "What are the data quality rules for claims?",
-    "SQL": "Find all claims over $5000"
-}
-
-with col1:
-    if st.button("📊 Schema Query", use_container_width=True):
-        st.session_state.example_query = example_queries["Schema"]
-
-with col2:
-    if st.button("✅ Validation Query", use_container_width=True):
-        st.session_state.example_query = example_queries["Validation"]
-
-with col3:
-    if st.button("💻 SQL Query", use_container_width=True):
-        st.session_state.example_query = example_queries["SQL"]
-
-st.markdown("---")
+st.markdown('<div class="sub-header">Ask questions about database schema, validation rules, or get SQL queries (Demo: Healthcare Claims)</div>', unsafe_allow_html=True)
 
 # Query input
 query = st.text_area(
@@ -142,8 +123,7 @@ if "last_result" in st.session_state and st.session_state.last_result:
                 if len(sql_queries) > 1:
                     st.markdown(f"**Query {i}:**")
                 st.code(sql, language="sql")
-                if st.button(f"📋 Copy SQL {i if len(sql_queries) > 1 else ''}", key=f"copy_{i}"):
-                    st.toast("✅ SQL copied to clipboard!")
+                # Note: st.code has a built-in copy button in Streamlit 1.29+
     
     # Retrieved Context section
     contexts = result.get("retrieved_context", [])
@@ -176,16 +156,14 @@ with st.sidebar:
     st.markdown("### ℹ️ About")
     st.markdown("""
     This RAG system helps you:
-    - 📊 Explore database schema
+    - 📊 Explore database schema & relationships
     - ✅ Check validation rules
     - 💻 Generate SQL queries
-    - 🔗 Understand relationships
     
     **Intent Types:**
-    - `schema`: Table structures
+    - `schema`: Table structures and relationships
     - `validation`: Data quality rules
     - `sql`: SQL query generation
-    - `relationship`: Table relationships
     """)
     
     st.markdown("---")
@@ -196,6 +174,57 @@ with st.sidebar:
     - **Collections:** 2
     - **Documents:** 28
     """)
+    
+    st.markdown("---")
+    
+    # Workflow visualization section
+    st.markdown("### 🔄 Workflow")
+    show_workflow = st.session_state.get("show_workflow", False)
+    button_label = "🙈 Hide LangGraph Flow" if show_workflow else "📊 Show LangGraph Flow"
+    
+    if st.button(button_label, use_container_width=True):
+        st.session_state.show_workflow = not show_workflow
+        st.rerun()
+    
+    # Display workflow diagram if toggled
+    if st.session_state.get("show_workflow", False):
+        with st.spinner("Generating workflow diagram..."):
+            try:
+                viz = visualize_workflow(format="mermaid")
+                mermaid_code = viz.get("mermaid", "")
+                
+                # Render mermaid diagram using HTML component with light background
+                mermaid_html = f"""
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body {{
+                            background-color: #ffffff;
+                            padding: 20px;
+                            margin: 0;
+                        }}
+                        .mermaid {{
+                            background-color: #ffffff;
+                        }}
+                    </style>
+                </head>
+                <body>
+                    <div class="mermaid">
+                    {mermaid_code}
+                    </div>
+                    <script type="module">
+                      import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+                      mermaid.initialize({{ startOnLoad: true }});
+                    </script>
+                </body>
+                </html>
+                """
+                components.html(mermaid_html, height=400, scrolling=True)
+                
+            except Exception as e:
+                st.error(f"Error generating diagram: {e}")
+                st.info("The workflow has 3 stages: Router → Retriever → Generator")
 
 # Footer
 st.markdown("---")

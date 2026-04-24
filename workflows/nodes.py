@@ -179,10 +179,10 @@ def generator_node(state: GraphState) -> GraphState:
     intent = IntentType(intent_str)
     
     # Separate schema and rules if we have both
-    schema_docs = [doc for doc in retrieved_docs if doc['metadata'].get('source') == 'schema_knowledge']
+    schema_docs = [doc for doc in retrieved_docs if doc['metadata'].get('source') == 'schema']
     rules_docs = [doc for doc in retrieved_docs if doc['metadata'].get('source') == 'validation_rules']
     
-    # If no separation happened, use all docs as schema (for schema/relationship queries)
+    # If no separation happened, use all docs as schema (for schema queries)
     if not schema_docs and not rules_docs:
         schema_docs = retrieved_docs
     
@@ -225,7 +225,7 @@ def route_query(state: GraphState) -> Literal["schema_retriever", "rules_retriev
     Conditional routing function - decides which vector store(s) to query.
     
     Routes based on intent:
-    - SCHEMA/RELATIONSHIP → schema_knowledge store
+    - SCHEMA → schema_knowledge store
     - VALIDATION → validation_rules store
     - SQL_GENERATION → both stores
     
@@ -234,7 +234,7 @@ def route_query(state: GraphState) -> Literal["schema_retriever", "rules_retriev
     """
     intent = state["intent"]
     
-    if intent in ["schema", "relationship"]:
+    if intent == "schema":
         return "schema_retriever"
     elif intent == "validation":
         return "rules_retriever"
@@ -249,7 +249,6 @@ def _get_routing_description(intent: str) -> str:
     """Helper to describe routing decision."""
     routes = {
         "schema": "schema_knowledge vector store",
-        "relationship": "schema_knowledge vector store",
         "validation": "validation_rules vector store",
         "sql": "both vector stores"
     }
